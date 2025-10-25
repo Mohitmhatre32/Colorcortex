@@ -130,7 +130,7 @@ A fast, clean, and stable detection pipeline ✅
 ## 📝 License
 
 Distributed under the **MIT License**.
-See `LICENSE` file for more information.
+See [`LICENSE`](LICENSE) file for more information.
 
 ---
 
