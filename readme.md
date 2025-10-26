@@ -50,6 +50,8 @@ cd colorcortex
 
 ```bash
 python -m venv venv
+```
+```bash
 venv\Scripts\activate
 ```
 
@@ -57,6 +59,9 @@ venv\Scripts\activate
 
 ```bash
 python3 -m venv venv
+```
+
+```bash
 source venv/bin/activate
 ```
 
