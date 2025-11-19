@@ -1,11 +1,13 @@
 import pandas as pd
 import numpy as np
-import os
 
-def generate_color_data(samples_per_color=500, file_path="colors.csv"):
+def generate_color_data(samples_per_color=1000, file_path="colors.csv"):
+    
+    all_colors = []
+    print("Generating synthetic color data...")
 
-    # Define the "center" HSV values for our primary colors.
-    # These are the "perfect" versions of each color.
+    # --- 1. Standard Chromatic Colors ---
+    # We keep the min saturation/value to 40 to ensure they look like "colors"
     color_centers = {
         'red':    [0, 220, 220],
         'orange': [15, 220, 220],
@@ -15,55 +17,53 @@ def generate_color_data(samples_per_color=500, file_path="colors.csv"):
         'purple': [140, 220, 220]
     }
 
-    # Add a second range for red, as it wraps around the 0/180 mark in HSV
-    color_centers_wrap = {
-        'red_wrap': [175, 220, 220] 
-    }
-
-    all_colors = []
-
-    print("Generating synthetic color data...")
-
-    # Generate data for standard colors
     for color_name, center_hsv in color_centers.items():
-        # Add random noise to the center values to create variations
-        # Hue has a smaller deviation, Saturation and Value have larger deviations
         h_noise = np.random.normal(loc=center_hsv[0], scale=5, size=samples_per_color)
         s_noise = np.random.normal(loc=center_hsv[1], scale=20, size=samples_per_color)
         v_noise = np.random.normal(loc=center_hsv[2], scale=30, size=samples_per_color)
 
-        # Clip the values to ensure they are within the valid HSV range
         h_clipped = np.clip(h_noise, 0, 179).astype(int)
-        s_clipped = np.clip(s_noise, 40, 255).astype(int) # Min saturation to avoid grays
-        v_clipped = np.clip(v_noise, 40, 255).astype(int) # Min value to avoid blacks
+        s_clipped = np.clip(s_noise, 50, 255).astype(int) # High Saturation
+        v_clipped = np.clip(v_noise, 50, 255).astype(int) # High Value
 
         for h, s, v in zip(h_clipped, s_clipped, v_clipped):
             all_colors.append([h, s, v, color_name])
+            
+    # --- 2. Red Wrap (High Hue) ---
+    h_noise = np.random.normal(loc=175, scale=5, size=samples_per_color)
+    s_noise = np.random.normal(loc=220, scale=20, size=samples_per_color)
+    v_noise = np.random.normal(loc=220, scale=30, size=samples_per_color)
+    
+    h_clipped = np.clip(h_noise, 0, 179).astype(int)
+    s_clipped = np.clip(s_noise, 50, 255).astype(int)
+    v_clipped = np.clip(v_noise, 50, 255).astype(int)
+    
+    for h, s, v in zip(h_clipped, s_clipped, v_clipped):
+        all_colors.append([h, s, v, 'red'])
 
-    # Generate data for the wrapped red hue (near 180)
-    for color_name, center_hsv in color_centers_wrap.items():
-        h_noise = np.random.normal(loc=center_hsv[0], scale=5, size=samples_per_color)
-        s_noise = np.random.normal(loc=center_hsv[1], scale=20, size=samples_per_color)
-        v_noise = np.random.normal(loc=center_hsv[2], scale=30, size=samples_per_color)
+    # --- 3. BLACK Generation ---
+    # Black is defined by Low Value (Brightness). Hue and Saturation can vary wildly.
+    # We generate random Hue/Sat, but keep Value very low (0-50).
+    for _ in range(samples_per_color):
+        h = np.random.randint(0, 180)
+        s = np.random.randint(0, 256)
+        v = np.random.randint(0, 60) # Very dark
+        all_colors.append([h, s, v, 'black'])
 
-        h_clipped = np.clip(h_noise, 0, 179).astype(int)
-        s_clipped = np.clip(s_noise, 40, 255).astype(int)
-        v_clipped = np.clip(v_noise, 40, 255).astype(int)
+    # --- 4. WHITE Generation ---
+    # White is defined by Low Saturation and High Value.
+    for _ in range(samples_per_color):
+        h = np.random.randint(0, 180)
+        s = np.random.randint(0, 40)   # Very low saturation (pale)
+        v = np.random.randint(200, 256) # Very bright
+        all_colors.append([h, s, v, 'white'])
 
-        for h, s, v in zip(h_clipped, s_clipped, v_clipped):
-            # We label this as 'red', not 'red_wrap'
-            all_colors.append([h, s, v, 'red'])
-
-    # Create a pandas DataFrame
+    # Save
     df = pd.DataFrame(all_colors, columns=['hue', 'saturation', 'value', 'color_name'])
-
-    # Save to CSV
     df.to_csv(file_path, index=False)
     
     print(f"Successfully generated '{file_path}' with {len(df)} samples.")
-    print("\nDataset preview:")
-    print(df.head())
-
+    print("Unique classes:", df['color_name'].unique())
 
 if __name__ == "__main__":
     generate_color_data()
